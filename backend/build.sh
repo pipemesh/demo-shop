@@ -3,4 +3,4 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 node src/build.mjs
-node ../tools/pack.mjs dist/api "dist/api-$(cat VERSION).tar"
+node ../tools/pack.mjs dist/api dist/api.tar
