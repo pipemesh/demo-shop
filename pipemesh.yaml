@@ -47,7 +47,8 @@ pipeline:
         screenshot: frontend/dist/preview.svg
 
     # A deploy checks out only the deploy scripts and consumes one
-    # artifact. It runs when that artifact, or a script, is new to it.
+    # artifact. It runs when that artifact, or a script, is new to it, and
+    # it is done once the site serves what it pushed.
     deploy_backend:
       job_type: deploy
       production: true
@@ -59,6 +60,7 @@ pipeline:
         API: build_backend/api
       variables:
         PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
+        SITE_URL: !settings
       secrets:
         - PAGES_DEPLOY_KEY
       script: |
@@ -80,6 +82,7 @@ pipeline:
         SITE: build_frontend/site
       variables:
         PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
+        SITE_URL: !settings
       secrets:
         - PAGES_DEPLOY_KEY
       script: |
