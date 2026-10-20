@@ -1,0 +1,106 @@
+# demo-shop: one pipeline for a shop whose backend (a price API) and
+# frontend (the site that calls it) live in one repository. The backend is
+# published as static JSON and the site as static files, both to this
+# repository's GitHub Pages, so the shop is real: https://pipemesh.github.io/demo-shop/
+pipeline:
+  type: pipeline
+  stages:
+    - build
+    - deploy
+    - smoke
+
+  jobs:
+    # A build reads its half and the shared tools, tests it, and packs the
+    # API's files. Same files in, same bytes out: an identical artifact is
+    # reused, and a deploy that already shipped it has nothing to do.
+    build_backend:
+      job_type: build
+      stage: build
+      image: node:24-bookworm@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0
+      checkout:
+        - backend
+        - tools
+      script: |
+        backend/test.sh
+        backend/build.sh
+      produces:
+        api: backend/dist/api.tar
+      reports:
+        tests: backend/build/reports/tests
+        coverage: backend/build/reports/coverage.md
+
+    build_frontend:
+      job_type: build
+      stage: build
+      image: node:24-bookworm@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0
+      checkout:
+        - frontend
+        - tools
+      script: |
+        frontend/test.sh
+        frontend/build.sh
+      produces:
+        site: frontend/dist/site.tar
+      reports:
+        tests: frontend/build/reports/tests
+        preview: frontend/dist/site
+        screenshot: frontend/dist/preview.svg
+
+    # A deploy checks out only the deploy scripts and consumes one
+    # artifact. It runs when that artifact, or a script, is new to it.
+    deploy_backend:
+      job_type: deploy
+      production: true
+      stage: deploy
+      image: node:24-bookworm@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0
+      checkout:
+        - deploy
+      consumes:
+        API: build_backend/api
+      variables:
+        PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
+      secrets:
+        - PAGES_DEPLOY_KEY
+      script: |
+        deploy/ssh.sh
+        deploy/publish.sh api "$API"
+
+    # The site ships after the API it calls: needs: orders the two deploys
+    # without an artifact between them.
+    deploy_frontend:
+      job_type: deploy
+      production: true
+      stage: deploy
+      image: node:24-bookworm@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0
+      needs:
+        - deploy_backend
+      checkout:
+        - deploy
+      consumes:
+        SITE: build_frontend/site
+      variables:
+        PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
+      secrets:
+        - PAGES_DEPLOY_KEY
+      script: |
+        deploy/ssh.sh
+        deploy/publish.sh site "$SITE"
+
+    # A task runs on every revision that reaches it: the live shop is
+    # asked whether the page loads and the API it calls answers.
+    smoke:
+      job_type: task
+      stage: smoke
+      image: node:24-bookworm@sha256:14078204b6bb268c107ceff6d3c43f45a888105e5c2b18b14c32b3409d93a1b0
+      needs:
+        - deploy_backend
+        - deploy_frontend
+      checkout:
+        - smoke
+      variables:
+        SITE_URL: !settings
+      script: node smoke/check.mjs "$SITE_URL"
+
+pipemesh:
+  pipelines:
+    pipeline: !ref pipeline
