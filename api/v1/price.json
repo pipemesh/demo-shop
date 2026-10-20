@@ -1,5 +1,5 @@
 {
-  "version": "1.3.0",
+  "version": "1.4.1",
   "items": [
     {
       "sku": "mug-01",
@@ -14,7 +14,7 @@
     {
       "sku": "cap-03",
       "name": "Field cap",
-      "price": "$24.00"
+      "price": "$25.00"
     }
   ]
 }
