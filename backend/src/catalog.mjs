@@ -2,7 +2,7 @@
 export const products = [
   { sku: 'mug-01', name: 'Enamel mug', cents: 1800 },
   { sku: 'tee-02', name: 'Logo tee', cents: 2900 },
-  { sku: 'cap-03', name: 'Field cap', cents: 2400 },
+  { sku: 'cap-03', name: 'Field cap', cents: 2500 },
 ];
 
 export const TAX_RATE = 0.08;
