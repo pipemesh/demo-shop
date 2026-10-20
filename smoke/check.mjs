@@ -20,7 +20,7 @@ async function ask() {
 
 const deadline = Date.now() + 120_000;
 for (;;) {
-  const problem = await ask();
+  const problem = await ask().catch((e) => `${base}: ${e.cause?.code ?? e.message}`);
   if (!problem) process.exit(0);
   if (Date.now() > deadline) { console.error(problem); process.exit(1); }
   console.log(`${problem}; asking again in 10 s`);
