@@ -131,7 +131,7 @@ g1() { sed -i.bak "s#^    branches: \[main\]\$#    branches: [main]\n    paths: 
 build() {
   git diff --quiet && git diff --cached --quiet || { echo "commit or drop your changes first"; exit 1; }
   start=$(git rev-parse --abbrev-ref HEAD)
-  git checkout -q main
+  git checkout -q --detach main            # main itself never moves
   c1; commit "API: add /v2/price" c1
   c2; commit "Site: price from /v2/price" c2
   c3; commit "Site: footer" c3
@@ -144,12 +144,12 @@ build() {
   fix2; commit "Build: the archive name the deploy expects" fix2
   c6; commit "Builds move into a workflow shared with PR checks" c6
   c7; commit "README: where the shop is" c7
-  git checkout -q main
   # the GitHub Actions half: no definition, the two workflows without path filters
-  git branch -f gha main && git checkout -q gha
+  git checkout -q -B gha main
   mkdir -p .github/workflows && cp scripts/gha/*.yml .github/workflows/ && git rm -q pipemesh.yaml && git rm -rq .pipemesh
   sed -i.bak "/^    paths:/d" .github/workflows/*.yml && rm .github/workflows/*.bak
   git add -A && git -c commit.gpgsign=false commit -q -m "The shop on GitHub Actions" && echo "gha  The shop on GitHub Actions"
+  git checkout -q --detach gha
   g0; commit "README: how to run locally" g0
   g1; commit "Workflows: run on the half that changed" g1
   c1; commit "API: add /v2/price" gc1
