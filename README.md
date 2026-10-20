@@ -25,3 +25,12 @@ has nothing to do.
 stacked branches `take/*`; `scripts/takes.sh push c1` puts one on `main`.
 The script lists them. `backend/deploy` refuses a version ending in
 `-bad`: that is how the backend deploy fails on cue.
+
+## Run it locally
+
+```bash
+backend/test.sh && backend/build.sh
+frontend/test.sh && frontend/build.sh
+```
+
+The API lands in `backend/dist/api`, the site in `frontend/dist/site`.
