@@ -11,7 +11,7 @@ rmSync(out, { recursive: true, force: true });
 mkdirSync(join(out, 'site'), { recursive: true });
 for (const f of ['index.html', 'app.mjs', 'render.mjs']) copyFileSync(join(root, 'src', f), join(out, 'site', f));
 
-const sample = { version: 'preview', items: [{ name: 'Enamel mug', price: '$18.00' }, { name: 'Logo tee', price: '$29.00' }, { name: 'Field cap', price: '$24.00' }] };
+const sample = { version: 'preview', items: [{ name: 'Enamel mug', price: '$18.00', tax: '$1.44' }, { name: 'Logo tee', price: '$29.00', tax: '$2.32' }, { name: 'Field cap', price: '$24.00', tax: '$1.92' }] };
 const html = readFileSync(join(root, 'src', 'index.html'), 'utf8');
 const footer = (html.match(/<footer>(.*?)<\/footer>/s) ?? [, ''])[1].replace(/<[^>]+>/g, '').trim();
 const lines = render(sample).match(/<li>.*?<\/li>/g).map((li) => li.replace(/<[^>]+>/g, '|').split('|').filter(Boolean));
