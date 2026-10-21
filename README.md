@@ -34,3 +34,5 @@ frontend/test.sh && frontend/build.sh
 ```
 
 The API lands in `backend/dist/api`, the site in `frontend/dist/site`.
+
+The shop is live at https://pipemesh.github.io/demo-shop/ and its board at https://pipemesh.io/github.com/pipemesh/demo-shop/-/pipeline.
