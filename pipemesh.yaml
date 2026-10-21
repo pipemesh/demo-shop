@@ -2,17 +2,11 @@
 # frontend (the site that calls it) live in one repository. The backend is
 # published as static JSON and the site as static files, both to this
 # repository's GitHub Pages, so the shop is real: https://pipemesh.github.io/demo-shop/
-pipeline:
-  type: pipeline
+builds:
+  type: workflow
   stages:
     - build
-    - deploy
-    - smoke
-
   jobs:
-    # A build reads its half and the shared tools, tests it, and packs the
-    # API's files. Same files in, same bytes out: an identical artifact is
-    # reused, and a deploy that already shipped it has nothing to do.
     build_backend:
       job_type: build
       stage: build
@@ -46,6 +40,22 @@ pipeline:
         preview: frontend/dist/site
         screenshot: frontend/dist/preview.svg
 
+pipeline:
+  type: pipeline
+  stages:
+    - build
+    - deploy
+    - smoke
+
+  jobs:
+    # The builds run as one workflow job: a group of builds and tests that
+    # deploy nothing, waited for as one. It is the same body the pull
+    # request checks run (pipemesh.workflows.checks below).
+    build:
+      job_type: workflow
+      stage: build
+      body: !ref builds
+
     # A deploy checks out only the deploy scripts and consumes one
     # artifact. It runs when that artifact, or a script, is new to it, and
     # it is done once the site serves what it pushed.
@@ -57,7 +67,7 @@ pipeline:
       checkout:
         - deploy
       consumes:
-        API: build_backend/api
+        API: build/build_backend/api
       variables:
         PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
         SITE_URL: !settings
@@ -79,7 +89,7 @@ pipeline:
       checkout:
         - deploy
       consumes:
-        SITE: build_frontend/site
+        SITE: build/build_frontend/site
       variables:
         PAGES_REMOTE: git@github.com:pipemesh/demo-shop.git
         SITE_URL: !settings
@@ -107,3 +117,13 @@ pipeline:
 pipemesh:
   pipelines:
     pipeline: !ref pipeline
+  workflows:
+    # The same builds, per pull request.
+    checks:
+      body: !ref builds
+      on: pull_request
+    # Every night, ask the live shop whether it still answers.
+    nightly:
+      body: !include .pipemesh/nightly.yaml
+      on: schedule
+      cron: "0 3 * * *"
