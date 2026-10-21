@@ -1,0 +1,35 @@
+# The frontend's workflow: runs when frontend files change, builds, deploys.
+name: deploy frontend
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - run: frontend/test.sh
+      - run: frontend/build.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: frontend/dist/site.tar
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: frontend/dist
+      - run: deploy/publish.sh site frontend/dist/site.tar
+        env:
+          PAGES_REMOTE: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
+          CI_COMMIT_SHORT_SHA: ${{ github.sha }}
