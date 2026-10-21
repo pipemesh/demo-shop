@@ -16,3 +16,9 @@ test('v1 lists every product with its price', () => {
 test('the API carries the build version', () => {
   assert.equal(api('1.2.3')['api/v1/price.json'].version, '1.2.3');
 });
+
+test('v2 adds the tax per item', () => {
+  const v2 = api('0.0.0-test')['api/v2/price.json'];
+  assert.equal(v2.currency, 'USD');
+  assert.equal(v2.items[0].tax, '$1.44');
+});
