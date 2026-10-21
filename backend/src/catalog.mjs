@@ -2,8 +2,10 @@
 export const products = [
   { sku: 'mug-01', name: 'Enamel mug', cents: 1800 },
   { sku: 'tee-02', name: 'Logo tee', cents: 2900 },
-  { sku: 'cap-03', name: 'Field cap', cents: 2400 },
+  { sku: 'cap-03', name: 'Field cap', cents: 2700 },
 ];
+
+export const TAX_RATE = 0.08;
 
 export function formatPrice(cents) {
   return `$${(cents / 100).toFixed(2)}`;
@@ -15,6 +17,14 @@ export function api(version) {
     'api/v1/price.json': {
       version,
       items: products.map((p) => ({ sku: p.sku, name: p.name, price: formatPrice(p.cents) })),
+    },
+    // v2 adds the currency and the tax each price carries.
+    'api/v2/price.json': {
+      version,
+      currency: 'USD',
+      items: products.map((p) => ({
+        sku: p.sku, name: p.name, price: formatPrice(p.cents), tax: formatPrice(Math.round(p.cents * TAX_RATE)),
+      })),
     },
   };
 }
